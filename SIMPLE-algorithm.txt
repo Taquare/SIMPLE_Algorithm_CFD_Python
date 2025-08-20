@@ -1,0 +1,20 @@
+-------------------- < SIMPLE Algorithm > --------------------
+
+→ Semi-Implicit Method for Pressure Linked Equations
+
+The key tricks for the SIMPLE algorithm are to :
+    → Derive an equation for pressure from the momentum and continuity equations.
+    → Derive a corrector for the velocity field, so that it satisfies the continuity equation.
+
+Solution process :
+    1.  Solve the momentum equation for the velocity field. This velocity field does not satisfy the continuity equation.
+        → MU = -∇p
+        → H = AU - MU
+
+    2.  Solve the Poisson equation for the pressure field.
+        → ∇·(A⁻¹∇p) = ∇(A⁻¹H)
+
+    3.  Use the pressure field to correct the velocity field so that is satisfies the continuity equation.
+        → U = A⁻¹H - A⁻¹∇p
+        
+    4.  The velocity field now does not satisfy the momentum equations. So repeat the cycle.
