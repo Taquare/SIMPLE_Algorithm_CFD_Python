@@ -13,46 +13,6 @@
 # ==================================================================================================== #
 
 
-# 1. Governing Equations (Incompressible Navier-Stokes):
-#       ρ∂u/∂t + ρ(u⋅∇)u = -∇p + μ∇²u + ρf
-#                     ∇u = 0
-
-# 2. Temporal Discretization (Implicit Euler):
-#    1st Order :
-#       ∂/∂t ∫ρu dV ≈ ρΔV/Δt ⋅ ​(un+1​ − un​)
-#       → AtP = ρΔxΔy/Δt
-#       → Qt = ρΔxΔy/Δt ⋅ un
-#
-#    3rd Order :
-#       ∂/∂t ∫ρu dV ≈ ρΔV/2Δt ⋅ ​(3un+1​ − 4un + un-1​)
-#       → AtP = 3ρΔxΔy/2Δt
-#       → Qt = ρΔxΔy/2Δt ⋅ (4un - un-1)
-
-# 3. Spacial Discretization:
-#    3.1 Diffusion (CDS):
-#        ∂²u/∂x² ≈ (ui+1,j - 2ui,j + ui-1,j)/Δx²
-#        ∂²u/∂y² ≈ (ui,j+1 - 2ui,j + ui,j-1)/Δy²
-#        → AdE = AdW = μΔy/Δx
-#        → AdN = AdS = μΔx/Δy
-#        → AdP = AdE + AdW + AdN + AdS
-#
-#    3.2 Convection (Upwind):
-#        a. Mass fluxes through faces:
-#           Ff = ρ(uf⋅nf)Af
-#        b. Upwind Scheme:
-#           Ff ⩾ 0 → uP, Ff < 0 → uK, K = E,W,N,S 
-#        → AcE = max(-Fe, 0), AcW = max(Fw, 0), AcN = max(-Fn, 0), AcS = max(Fs, 0)
-#        → AcP = AcE + AcW + AcN + AcS
-
-# 4. Pressure gradient:
-#    x-momentum :
-#        - ∫∇p dV ≈ -ΔV/Δx ⋅ (pe - pw)
-#        → Qp_u = -Δy⋅ (pe - pw)
-#    y-momentum :
-#        - ∫∇p dV ≈ -ΔV/Δy ⋅ (pn - ps)
-#        → Qp_v = -Δx⋅ (pn - ps)
-
-
 # ==================== < IMPORTS > ===================
 
 import numpy as np
@@ -67,6 +27,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from boundary_conditions import *
 from momentum import *
+from faces import *
 
 
 # ==================== < PARAMETERS > ===================
@@ -108,16 +69,10 @@ apply_p_bcs(p)
 
 # ==================== < MAIN TIME LOOP > ===================
 
-u_star[1:-1, 1:-1] = solve_momentum(u, v, p, 'x', Nx, Ny, dx, dy, rho, mu, dt)
+u_star[1:-1, 1:-1], aP_u = solve_momentum(u, v, p, 'x', Nx, Ny, dx, dy, rho, mu, dt)
 apply_u_bcs(u_star, Ut)
 
-plt.imshow(u_star, origin='lower')
-plt.colorbar()
-plt.show()
-
-v_star[1:-1, 1:-1] = solve_momentum(u, v, p, 'y', Nx, Ny, dx, dy, rho, mu, dt)
+v_star[1:-1, 1:-1], aP_v = solve_momentum(u, v, p, 'y', Nx, Ny, dx, dy, rho, mu, dt)
 apply_v_bcs(v_star)
 
-plt.imshow(v_star, origin='lower')
-plt.colorbar()
-plt.show()
+ue_corr, uw_corr, vn_corr, vs_corr = rhie_chow_face_velocites(u_star, v_star, p, aP_u, aP_v, dx, dy)

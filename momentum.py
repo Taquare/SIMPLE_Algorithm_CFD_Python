@@ -2,6 +2,8 @@ import numpy as np
 import scipy.sparse.linalg
 import pyamg
 
+from faces import *
+
 def build_momentum_coeffs(u, v, p, axis, Nx, Ny, dx, dy, rho, mu, dt):
     """
     Assemble the coefficients for the x/y-momentum (u/v-velocity) equations.
@@ -24,10 +26,7 @@ def build_momentum_coeffs(u, v, p, axis, Nx, Ny, dx, dy, rho, mu, dt):
     Qt = rho*dx*dy/dt
 
     # Face velocities:
-    ue = 0.5*(u[1:-1, 1:-1] + u[1:-1, 2:])
-    uw = 0.5*(u[1:-1, :-2] + u[1:-1, 1:-1])
-    vn = 0.5*(v[1:-1, 1:-1] + v[2:, 1:-1])
-    vs = 0.5*(v[:-2, 1:-1] + v[1:-1, 1:-1])
+    ue, uw, vn, vs = linear_face_velocities(u, v)
 
     # Mass fluxes through faces:
     Fe, Fw, Fn, Fs = rho*ue*dy, rho*uw*dy, rho*vn*dx, rho*vs*dx
@@ -99,4 +98,4 @@ def solve_momentum(u, v, p, axis, Nx, Ny, dx, dy, rho, mu, dt):
     amg_solver = pyamg.ruge_stuben_solver(A)
     res = amg_solver.solve(b.reshape(Nx*Ny), tol=1e-6, cycle='V')
 
-    return res.reshape([Ny, Nx])
+    return res.reshape([Ny, Nx]), aP

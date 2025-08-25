@@ -18,3 +18,43 @@ Solution process :
         → U = A⁻¹H - A⁻¹∇p
         
     4.  The velocity field now does not satisfy the momentum equations. So repeat the cycle.
+
+Discretization :
+    1.  Governing Equations (Incompressible Navier-Stokes):
+            ρ∂u/∂t + ρ(u⋅∇)u = -∇p + μ∇²u + ρf
+                         ∇u = 0
+
+    2.  Temporal Discretization (Implicit Euler):
+        1st Order :
+            ∂/∂t ∫ρu dV ≈ ρΔV/Δt ⋅ ​(un+1​ − un​)
+            → AtP = ρΔxΔy/Δt
+            → Qt = ρΔxΔy/Δt ⋅ un
+
+        3rd Order :
+            ∂/∂t ∫ρu dV ≈ ρΔV/2Δt ⋅ ​(3un+1​ − 4un + un-1​)
+            → AtP = 3ρΔxΔy/2Δt
+            → Qt = ρΔxΔy/2Δt ⋅ (4un - un-1)
+
+    3. Spacial Discretization:
+        3.1 Diffusion (CDS):
+            ∂²u/∂x² ≈ (ui+1,j - 2ui,j + ui-1,j)/Δx²
+            ∂²u/∂y² ≈ (ui,j+1 - 2ui,j + ui,j-1)/Δy²
+            → AdE = AdW = μΔy/Δx
+            → AdN = AdS = μΔx/Δy
+            → AdP = AdE + AdW + AdN + AdS
+
+        3.2 Convection (Upwind):
+            a. Mass fluxes through faces:
+                Ff = ρ(uf⋅nf)Af
+            b. Upwind Scheme:
+                Ff ⩾ 0 → uP, Ff < 0 → uK, K = E,W,N,S
+            → AcE = max(-Fe, 0), AcW = max(Fw, 0), AcN = max(-Fn, 0), AcS = max(Fs, 0)
+            → AcP = AcE + AcW + AcN + AcS
+
+    4.  Pressure gradient:
+        x-momentum :
+            - ∫∇p dV ≈ -ΔV/Δx ⋅ (pE - pW)
+            → Qp_u = -Δy ⋅ (pE - pW)
+        y-momentum :
+            - ∫∇p dV ≈ -ΔV/Δy ⋅ (pN - pS)
+            → Qp_v = -Δx ⋅ (pN - pS)
