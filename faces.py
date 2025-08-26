@@ -27,9 +27,9 @@ def rhie_chow_face_velocites(u, v, p, aP_u, aP_v, dx, dy):
     dpdy_ = 0.5/dy * ((p[2:-1, 1:-1] - p[:-3, 1:-1]) + (p[3:, 1:-1] - p[1:-2, 1:-1]))
 
     # Update ue, uw, vn, vs
-    ue[:, :-1] -= (1.0/aP_ew) * (dpdx - dpdx_)
-    uw[:, 1:]  -= (1.0/aP_ew) * (dpdx - dpdx_)
-    vn[:-1, :] -= (1.0/aP_ns) * (dpdy - dpdy_)
-    vs[1:, :]  -= (1.0/aP_ns) * (dpdy - dpdy_)
+    ue[:, :-1] -= (dx*dy)/aP_ew * (dpdx - dpdx_)
+    uw[:, 1:]  -= (dx*dy)/aP_ew * (dpdx - dpdx_)
+    vn[:-1, :] -= (dx*dy)/aP_ns * (dpdy - dpdy_)
+    vs[1:, :]  -= (dx*dy)/aP_ns * (dpdy - dpdy_)
 
     return ue, uw, vn, vs

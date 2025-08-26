@@ -87,15 +87,13 @@ def assemble_sparse_matrix(aP, aE, aW, aN, aS, Nx, Ny):
     return A
 
 
-def solve_momentum(u, v, p, axis, Nx, Ny, dx, dy, rho, mu, dt):
+def solve_momentum(aP, aE, aW, aN, aS, b, Nx, Ny):
     """
     Solve x/y-momentum equation for u* or v*.
     """
-
-    aP, aE, aW, aN, aS, b = build_momentum_coeffs(u, v, p, axis, Nx, Ny, dx, dy, rho, mu, dt)
     A = assemble_sparse_matrix(aP, aE, aW, aN, aS, Nx, Ny)
 
     amg_solver = pyamg.ruge_stuben_solver(A)
     res = amg_solver.solve(b.reshape(Nx*Ny), tol=1e-6, cycle='V')
 
-    return res.reshape([Ny, Nx]), aP
+    return res.reshape([Ny, Nx])

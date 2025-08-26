@@ -69,10 +69,12 @@ apply_p_bcs(p)
 
 # ==================== < MAIN TIME LOOP > ===================
 
-u_star[1:-1, 1:-1], aP_u = solve_momentum(u, v, p, 'x', Nx, Ny, dx, dy, rho, mu, dt)
+aP_u, aE_u, aW_u, aN_u, aS_u, b_u = build_momentum_coeffs(u, v, p, 'x', Nx, Ny, dx, dy, rho, mu, dt)
+u_star[1:-1, 1:-1] = solve_momentum(aP_u, aE_u, aW_u, aN_u, aS_u, b_u, Nx, Ny)
 apply_u_bcs(u_star, Ut)
 
-v_star[1:-1, 1:-1], aP_v = solve_momentum(u, v, p, 'y', Nx, Ny, dx, dy, rho, mu, dt)
+aP_v, aE_v, aW_v, aN_v, aS_v, b_v = build_momentum_coeffs(u, v, p, 'y', Nx, Ny, dx, dy, rho, mu, dt)
+v_star[1:-1, 1:-1] = solve_momentum(aP_v, aE_v, aW_v, aN_v, aS_v, b_v, Nx, Ny)
 apply_v_bcs(v_star)
 
 ue_corr, uw_corr, vn_corr, vs_corr = rhie_chow_face_velocites(u_star, v_star, p, aP_u, aP_v, dx, dy)
