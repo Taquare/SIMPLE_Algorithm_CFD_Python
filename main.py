@@ -27,7 +27,8 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from boundary_conditions import *
 from momentum import *
-from faces import *
+from continuity import *
+from sparse_solver import *
 
 
 # ==================== < PARAMETERS > ===================
@@ -59,8 +60,9 @@ n_steps = math.ceil((t_end - t)/dt)    # Number of timesteps
 u = np.zeros((Nx+2, Ny+2))    # x-velocity
 v = np.zeros((Nx+2, Ny+2))    # y-velocity
 p = np.zeros((Nx+2, Ny+2))    # Pressure
-u_star = np.zeros_like(u)
-v_star = np.zeros_like(v)
+u_star = np.zeros_like(u)     # Tentative x-velocity
+v_star = np.zeros_like(v)     # Tentative y-velocity
+p_prime = np.zeros_like(p)     # Pressure correction
 
 apply_u_bcs(u, Ut)
 apply_v_bcs(v)
@@ -70,11 +72,16 @@ apply_p_bcs(p)
 # ==================== < MAIN TIME LOOP > ===================
 
 aP_u, aE_u, aW_u, aN_u, aS_u, b_u = build_momentum_coeffs(u, v, p, 'x', Nx, Ny, dx, dy, rho, mu, dt)
-u_star[1:-1, 1:-1] = solve_momentum(aP_u, aE_u, aW_u, aN_u, aS_u, b_u, Nx, Ny)
+u_star[1:-1, 1:-1] = solve(aP_u, aE_u, aW_u, aN_u, aS_u, b_u, Nx, Ny)
 apply_u_bcs(u_star, Ut)
 
 aP_v, aE_v, aW_v, aN_v, aS_v, b_v = build_momentum_coeffs(u, v, p, 'y', Nx, Ny, dx, dy, rho, mu, dt)
-v_star[1:-1, 1:-1] = solve_momentum(aP_v, aE_v, aW_v, aN_v, aS_v, b_v, Nx, Ny)
+v_star[1:-1, 1:-1] = solve(aP_v, aE_v, aW_v, aN_v, aS_v, b_v, Nx, Ny)
 apply_v_bcs(v_star)
 
-ue_corr, uw_corr, vn_corr, vs_corr = rhie_chow_face_velocites(u_star, v_star, p, aP_u, aP_v, dx, dy)
+aP_p, aE_p, aW_p, aN_p, aS_p, b_p = build_continuity_coeffs(u_star, v_star, p, aP_u, aP_v, Nx, Ny, dx, dy, rho)
+p_prime[1:-1, 1:-1] = solve(aP_p, aE_p, aW_p, aN_p, aS_p, b_p, Nx, Ny)
+
+plt.imshow(p_prime, origin='lower')
+plt.colorbar()
+plt.show()
