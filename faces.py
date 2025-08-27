@@ -2,6 +2,7 @@ import numpy as np
 
 def linear_face_velocities(u, v):
     """
+    Compute the face velocities using linear interpolation.
     """
 
     ue = 0.5*(u[1:-1, 1:-1] + u[1:-1, 2:])
@@ -13,6 +14,7 @@ def linear_face_velocities(u, v):
 
 def rhie_chow_face_velocites(u, v, p, aP_u, aP_v, dx, dy):
     """
+    Compute the corrected face velocities using Rhie-Chow interpolation.
     """
 
     ue, uw, vn, vs = linear_face_velocities(u, v)
