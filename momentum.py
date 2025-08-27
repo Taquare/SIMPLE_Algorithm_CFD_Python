@@ -1,6 +1,4 @@
 import numpy as np
-import scipy.sparse.linalg
-import pyamg
 
 from faces import *
 
@@ -19,29 +17,20 @@ def build_momentum_coeffs(u, v, p, axis, Nx, Ny, dx, dy, rho, mu, dt):
     aS = np.zeros((Ny, Nx))
     b  = np.zeros((Ny, Nx))
 
-    # Diffusion terms:
-    aE_d, aW_d, aN_d, aS_d = mu*dy/dx, mu*dy/dx, mu*dx/dy, mu*dx/dy
-
-    # Implicit time term:
-    Qt = rho*dx*dy/dt
-
     # Face velocities:
     ue, uw, vn, vs = linear_face_velocities(u, v)
 
     # Mass fluxes through faces:
     Fe, Fw, Fn, Fs = rho*ue*dy, rho*uw*dy, rho*vn*dx, rho*vs*dx
 
-    # Convection coefficients (Upwind):
-    aE_c = np.maximum(-Fe, 0)
-    aW_c = np.maximum(Fw, 0)
-    aN_c = np.maximum(-Fn, 0)
-    aS_c = np.maximum(Fs, 0)
+    # Coefficient arrays – Diffusion + Convection (Upwind):
+    aE = mu*dy/dx + np.maximum(-Fe, 0)
+    aW = mu*dy/dx + np.maximum(Fw, 0)
+    aN = mu*dx/dy + np.maximum(-Fn, 0)
+    aS = mu*dx/dy + np.maximum(Fs, 0)
 
-    # Full coefficient arrays:
-    aE = aE_c + aE_d
-    aW = aW_c + aW_d
-    aN = aN_c + aN_d
-    aS = aS_c + aS_d
+    # Implicit time term:
+    Qt = rho*dx*dy/dt
 
     # RHS:
     if axis == 'x':
@@ -69,31 +58,3 @@ def build_momentum_coeffs(u, v, p, axis, Nx, Ny, dx, dy, rho, mu, dt):
     aP = Qt + aE + aW + aN + aS
 
     return aP, aE, aW, aN, aS, b
-
-
-def assemble_sparse_matrix(aP, aE, aW, aN, aS, Nx, Ny):
-    """
-    Assemble sparse 2D matrix from coefficient arrays.
-    """
-
-    d0 = aP.ravel()
-    de = aE.ravel()[:-1]
-    dw = aW.ravel()[1:]
-    dn = aN.ravel()[:-Nx]
-    ds = aS.ravel()[Nx:]
-
-    A = scipy.sparse.diags([d0, de, dw, dn, ds], [0, 1, -1, Nx, -Nx], format='csr')
-
-    return A
-
-
-def solve_momentum(aP, aE, aW, aN, aS, b, Nx, Ny):
-    """
-    Solve x/y-momentum equation for u* or v*.
-    """
-    A = assemble_sparse_matrix(aP, aE, aW, aN, aS, Nx, Ny)
-
-    amg_solver = pyamg.ruge_stuben_solver(A)
-    res = amg_solver.solve(b.reshape(Nx*Ny), tol=1e-6, cycle='V')
-
-    return res.reshape([Ny, Nx])
