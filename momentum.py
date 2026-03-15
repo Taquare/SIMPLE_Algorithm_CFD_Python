@@ -2,7 +2,7 @@ import numpy as np
 
 from faces import *
 
-def build_momentum_coeffs(u, v, p, axis, Nx, Ny, dx, dy, rho, mu, dt):
+def build_momentum_coeffs(u, v, p, u_n, v_n, axis, Nx, Ny, dx, dy, rho, mu, dt):
     """
     Assemble the coefficients for the x/y-momentum (u/v-velocity) equations.
 
@@ -34,12 +34,12 @@ def build_momentum_coeffs(u, v, p, axis, Nx, Ny, dx, dy, rho, mu, dt):
 
     # RHS:
     if axis == 'x':
-        Qp = -dy * (p[1:-1, 2:] - p[1:-1, :-2]) / 2    # Pressure gradient term
-        b = Qt*u[1:-1, 1:-1] + Qp
+        Qp = -dy * (p[1:-1, 2:] - p[1:-1, :-2])    # Pressure gradient term
+        b = Qt*u_n[1:-1, 1:-1] + Qp
     
     elif axis == 'y':
-        Qp = -dx * (p[2:, 1:-1] - p[:-2, 1:-1]) / 2    # Pressure gradient term
-        b = Qt*v[1:-1, 1:-1] + Qp
+        Qp = -dx * (p[2:, 1:-1] - p[:-2, 1:-1])    # Pressure gradient term
+        b = Qt*v_n[1:-1, 1:-1] + Qp
 
     # Add boundary contributions to RHS:
     field = {"x": u, "y": v}[axis]
