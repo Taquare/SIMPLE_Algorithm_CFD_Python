@@ -19,7 +19,7 @@ Solution process :
         
     4.  The velocity field now does not satisfy the momentum equations. So repeat the cycle.
 
-Discretization :
+Discretization of the Navier-Stokes equations:
     1.  Governing Equations (Incompressible Navier-Stokes):
             ρ∂u/∂t + ρ(u⋅∇)u = -∇p + μ∇²u + ρf
                          ∇u = 0
